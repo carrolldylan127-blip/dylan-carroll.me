@@ -1,0 +1,150 @@
+"""Build PSYC 105 Final Exam Anki deck (.apkg).
+
+Generates one master deck "PSYC 105" with subdecks per the syllabus
+chronology, plus ZAPS Demos and Mastery Questions subdecks.
+"""
+
+import genanki
+
+# ---------------------------------------------------------------------------
+# Model
+# ---------------------------------------------------------------------------
+
+BASIC_MODEL = genanki.Model(
+    1607392319,
+    "PSYC 105 Basic",
+    fields=[{"name": "Front"}, {"name": "Back"}],
+    templates=[
+        {
+            "name": "Card 1",
+            "qfmt": "{{Front}}",
+            "afmt": '{{FrontSide}}<hr id="answer">{{Back}}',
+        }
+    ],
+    css=(
+        ".card { font-family: -apple-system, Helvetica, Arial, sans-serif;"
+        " font-size: 18px; color: #222; background: #fafafa; padding: 16px;"
+        " line-height: 1.5; }"
+        " hr#answer { margin: 16px 0; }"
+        " b { color: #1a4480; }"
+    ),
+)
+
+PARENT_DECK = "PSYC 105"
+
+# Use unique deck IDs derived from a base
+BASE_DECK_ID = 2059400110
+deck_counter = [0]
+
+
+def make_deck(name):
+    deck_counter[0] += 1
+    return genanki.Deck(BASE_DECK_ID + deck_counter[0], f"{PARENT_DECK}::{name}")
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def add_card(deck, front, back, tags):
+    note = genanki.Note(
+        model=BASIC_MODEL,
+        fields=[front.replace("\n", "<br>"), back.replace("\n", "<br>")],
+        tags=[t.replace(" ", "_") for t in tags],
+    )
+    deck.add_note(note)
+
+
+def add_term(deck, term, definition, application, chapter_tag, section_tag):
+    add_card(
+        deck,
+        f"<b>Term:</b> {term}",
+        definition,
+        [chapter_tag, section_tag, "definition"],
+    )
+    if application:
+        add_card(
+            deck,
+            f"<b>High-Stakes Application of:</b> {term}",
+            application,
+            [chapter_tag, section_tag, "application"],
+        )
+
+
+def add_comparison(deck, title, text, chapter_tag, section_tag):
+    add_card(
+        deck,
+        f"<b>Compare:</b> {title}",
+        text,
+        [chapter_tag, section_tag, "comparison"],
+    )
+
+
+def add_overview(deck, section_label, title, text, chapter_tag, section_tag):
+    front = f"<b>Overview of Section {section_label}:</b> {title}" if section_label else f"<b>Overview:</b> {title}"
+    add_card(deck, front, text, [chapter_tag, section_tag, "overview"])
+
+
+def add_mastery(deck, label, question, answer, chapter_tag):
+    add_card(
+        deck,
+        f"<b>Mastery Question — {label}</b><br><br>{question}",
+        answer,
+        [chapter_tag, "mastery"],
+    )
+
+
+def add_zaps(deck, title, week, chapter, concepts):
+    front = f"<b>ZAPS Demo:</b> {title}"
+    back = f"<b>Week:</b> {week}<br><b>Linked Chapter(s):</b> {chapter}<br><b>Key Concepts:</b> {concepts}"
+    tags = ["zaps"]
+    for ch in chapter.replace(" ", "").replace("Chapter", "Ch").split("+"):
+        tags.append(ch.split(".")[0])
+    add_card(deck, front, back, tags)
+
+
+# ---------------------------------------------------------------------------
+# Decks
+# ---------------------------------------------------------------------------
+
+decks = []
+
+# =========================================================================
+# CHAPTER 8 — THINKING AND INTELLIGENCE
+# =========================================================================
+ch8 = make_deck("Week 9 - Chapter 8 (Thinking & Intelligence)")
+decks.append(ch8)
+C = "Ch8"
+
+# Section: What Is Thinking?
+add_overview(
+    ch8, "", "What Is Thinking?",
+    "This introductory section explores the fundamental nature of thought as the mental manipulation of internal representations. It illustrates how thinking allows humans to transcend immediate sensory experience to plan, reason, and solve problems. By using the example of a chess prodigy, it highlights that while some thinking is extraordinary, most cognitive processes are used for everyday navigation.",
+    C, "ch8_intro")
+add_term(ch8, "Thinking",
+    "The mental manipulation of representations (e.g., of objects, words, or ideas).",
+    "Clinical Neuropsychology — Identifying specific cognitive deficits in patients with brain trauma who can no longer manipulate mental maps for basic navigation.",
+    C, "ch8_intro")
+add_comparison(ch8, "Reasoning vs. Decision Making vs. Problem Solving",
+    "Reasoning involves determining the validity of a conclusion; decision making focuses on selecting between alternatives; problem solving is the process of overcoming obstacles to reach a specific goal.",
+    C, "ch8_intro")
+
+# 8.1
+add_overview(ch8, "8.1", "Thinking Is the Mental Manipulation of Representations",
+    "Section 8.1 distinguishes between the two primary ways the mind represents information: analogically and symbolically. Analogical representations share physical characteristics with the objects they represent, whereas symbolic representations are abstract and arbitrary. Understanding these two modes is essential for grasping how the brain organizes complex information efficiently.",
+    C, "8.1")
+add_term(ch8, "Analogical Representations",
+    "Mental representations that have some of the physical characteristics of objects (e.g., an image of a violin).",
+    "Surgical Planning — Surgeons use 3D mental \"maps\" and analogical models of a patient's unique anatomy to navigate high-risk procedures.",
+    C, "8.1")
+add_term(ch8, "Symbolic Representations",
+    "Abstract mental representations that do not correspond to the physical features of objects (e.g., the word \"violin\").",
+    "Aviation — Pilots must rapidly process symbolic readouts (alphanumeric data) on a flight deck to make split-second decisions during mid-air emergencies.",
+    C, "8.1")
+add_comparison(ch8, "Analogical vs. Symbolic",
+    "Analogical representations rely on similarity (like a photograph), while symbolic representations rely on arbitrary rules (like the letters that form a word).",
+    C, "8.1")
+
+# 8.2
+add_overview(ch8, "8.2", "Schemas and Concepts Are the Basis of Thinking",
